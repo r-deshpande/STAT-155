@@ -1,7 +1,25 @@
 ---
-title: "data dictionary"
+title: "Data Dictionary"
 format: md
 editor: visual
 ---
 
-## 
+## Variables
+
+kind: Whether the essay was written by a human or by AI
+
+.pred_AI: The class probability from the GPT detector that the inputted text was written by AI.
+
+.pred_class: The uncalibrated class prediction.
+
+detector: The name of the detector used to generate the predictions.
+
+native: For essays written by humans, whether the essay was written by a native English writer or not. N/A means the text was not written by a human.
+
+name: A label for the experiment that the predictions were generated from.
+
+model: The name of the model that generated the essay if it was AI generated.
+
+document_id: An identifier for the supplied essay. Some essays were duplicated and supplied across multiple detectors.
+
+prompt: For essays that were written by AI, this is a descriptor for the form of prompt engineering that was passed onto the model.
