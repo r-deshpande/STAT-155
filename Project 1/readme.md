@@ -1,5 +1,19 @@
-# readme
+# Project Proposal
 
+
+## Narrative
+
+I am investigating whether an AI detection model is more likely to flag
+a certain style of writing. Through this project, my goal is to predict
+whether a human-written sample and an AI-generated sample is likely to
+be flagged based on the writing conventions present. I chose this
+dataset because of the rampant use of AI and AI detection models
+(TurnItIn, Grammarly) that tend to output false positives. The raw data
+comes from Simon Couch’s detectors R package and the processed data
+present in Project 1 comes from TidyTuesday - GPT Detectors
+(07/18/2023).
+
+## Data
 
 ``` r
 rm(list=ls())
