@@ -1,0 +1,11 @@
+---
+title: "readme"
+format: md
+editor: visual
+---
+
+## STAT 155 Project Description
+
+This project aims to explore if there are any patterns when a GPT detection tool aims to distinguish AI-generated text from human-written text. I aim to predict if a text is AI or human written, and if there are any types of texts that are more likely to be missclassified.
+
+I am using the tinytuesday dataset from 7/18/23, about GPT Detectors. I chose this project because of the prevalence of AI in our current society, and I thought it could be interesting to see if there's a pattern when it comes to AI detection mechanisms failing or misreporting results.
