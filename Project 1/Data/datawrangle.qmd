@@ -1,25 +1,164 @@
 ---
-title: "Data Dictionary"
+title: "Data Preprocessing"
 format: md
 editor: visual
 ---
 
-## Variables
+### Set up python
 
-kind: Whether the essay was written by a human or by AI
+```{r}
+install.packages("reticulate") # setting up the python environment
+library(reticulate)
 
-.pred_AI: The class probability from the GPT detector that the inputted text was written by AI.
+reticulate::py_install(c("requests", "pandas", "textstat"))
+```
 
-.pred_class: The uncalibrated class prediction.
+```{python}
+import urllib.parse # importing a python library and testing
+your_string = "Hello World! This is a test."
+encoded_string = urllib.parse.quote(your_string)
+print(encoded_string)
+```
 
-detector: The name of the detector used to generate the predictions.
+### Download the rest of the needed libraries
 
-native: For essays written by humans, whether the essay was written by a native English writer or not. N/A means the text was not written by a human.
+```{python}
+import requests
+import json
+import os
+from urllib.parse import quote
 
-name: A label for the experiment that the predictions were generated from.
+import pandas as pd
+import nltk
+import textstat
+from nltk.sentiment import SentimentIntensityAnalyzer
+from nltk import pos_tag, word_tokenize, sent_tokenize
+from collections import Counter
+import numpy as np
+```
 
-model: The name of the model that generated the essay if it was AI generated.
+### Define Variables
 
-document_id: An identifier for the supplied essay. Some essays were duplicated and supplied across multiple detectors.
+```{python}
+# Constants
+REPO = "simonpcouch/detectors"
+BRANCH = "main"
+API_BASE = "https://api.github.com/repos/simonpcouch/detectors/contents/data-raw/Data_and_Results"
+RAW_BASE = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/data-raw/Data_and_Results"
+```
 
-prompt: For essays that were written by AI, this is a descriptor for the form of prompt engineering that was passed onto the model.
+```{python}
+def list_all_files(api_url, path=""): # GET request to specified API url to get directory info.
+    response = requests.get(api_url)
+    response.raise_for_status() # raise error if request failed
+    items = response.json()
+    file_info_list = []
+    for item in items:
+        if item["type"] == "file" and item["name"].endswith(".json"):
+            file_info_list.append({
+                "file_name": item["name"],
+                "sub_folder": path,
+                "full_path": f"{path}/{item['name']}".strip("/")
+            })
+        elif item["type"] == "dir":
+            subfolder_path = f"{path}/{item['name']}".strip("/")
+            file_info_list.extend(list_all_files(item["url"], subfolder_path))
+    return file_info_list
+
+def fetch_json(file_path):
+    raw_url = f"{RAW_BASE}/{quote(file_path)}"
+    response = requests.get(raw_url)
+    if response.status_code == 200:
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            return None
+    return None
+
+# Step 1: List all files
+all_files = list_all_files(API_BASE)
+
+# Step 2: Load all files into raw dataframe
+model_preds_raw = []
+for file_info in all_files:
+    content = fetch_json(file_info['full_path'])
+    if content is not None:
+        model_preds_raw.append({
+            "path": file_info['full_path'],
+            "file_name": file_info['file_name'],
+            "dir": file_info['full_path'].replace(file_info['file_name'], ""),
+            "contents": content
+        })
+
+# Step 3: Split into predictions, metadata, input
+model_preds = []
+model_metadata = []
+model_input = []
+
+for item in model_preds_raw:
+    if "data.json" in item['file_name']:
+        model_input.append(item)
+    elif "name.json" in item['file_name']:
+        df = pd.DataFrame(item["contents"].items(), columns=["name", "value"])
+        df["dir"] = item["dir"]
+        model_metadata.append(df.pivot_table(index="dir", columns="name", values="value", aggfunc="first").reset_index())
+    else:
+        df = pd.DataFrame(item["contents"])
+        df["path"] = item["path"]
+        df["dir"] = item["dir"]
+        model_preds.append(df)
+
+# Combine metadata
+model_metadata_df = pd.concat(model_metadata, ignore_index=True) if model_metadata else pd.DataFrame()
+
+# Combine predictions
+model_preds_df = pd.concat(model_preds, ignore_index=True)
+
+# Join preds and metadata
+detectors = pd.merge(model_preds_df, model_metadata_df, on="dir", how="left")
+
+# Extract columns
+detectors["detector"] = detectors["path"].apply(lambda x: os.path.basename(x).replace(".json", ""))
+detectors["document_id"] = detectors["document"].astype("category").cat.codes
+
+# Prompt mapping
+def map_prompt(dir_str):
+    if "CollegeEssay_gpt3_31" in dir_str:
+        return "Plain"
+    elif "CollegeEssay_gpt3PromptEng_31" in dir_str:
+        return "Elevate using literary"
+    elif "CS224N_gpt3_145" in dir_str:
+        return "Plain"
+    elif "CS224N_gpt3PromptEng_145" in dir_str:
+        return "Elevate using technical"
+    elif "HewlettStudentEssay_GPTsimplify_88" in dir_str:
+        return "Simplify like non-native"
+    elif "TOEFL_gpt4polished_91" in dir_str:
+        return "Enhance like native"
+    else:
+        return None
+
+detectors["prompt"] = detectors["dir"].apply(map_prompt)
+detectors = detectors.rename(columns={"score": ".pred_AI"})
+detectors["kind"] = detectors["kind"].map({"Human-Written": "Human", "AI-Generated": "AI"})
+detectors[".pred_class"] = detectors[".pred_AI"].apply(lambda x: "AI" if x > 0.5 else "Human")
+
+# Native mapping
+def map_native(name):
+    if name in ["Real TOEFL"]:
+        return "No"
+    elif name in ["US 8th grade essay", "Real College Essays", "Real CS224N"]:
+        return "Yes"
+    else:
+        return None
+
+detectors["native"] = detectors["name"].apply(map_native)
+detectors = detectors[["kind", ".pred_AI", ".pred_class", "detector", "native", "prompt", "document", "document_id"]]
+
+# Shuffle
+detectors = detectors.sample(frac=1, random_state=2023).reset_index(drop=True)
+
+# Save to CSV
+detectors.to_csv("detectors_prepped_with_document.csv", index=False)
+print("Saved processed dataset with document column as 'detectors_prepped.csv'")
+```
