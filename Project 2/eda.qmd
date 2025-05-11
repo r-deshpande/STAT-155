@@ -1,0 +1,7 @@
+---
+title: "readme"
+format: md
+editor: visual
+---
+
+## Rucha Deshpande - STAT 155 Project
