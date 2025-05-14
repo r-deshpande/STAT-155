@@ -1,23 +1,15 @@
 ---
-title: "eda"
+title: "preprocessing"
 format: md
 editor: visual
 ---
 
-## Introduction
-
-**Objective:**
-
-**Main Variables of Interest:**
-
-## Data Description 
+## Preprocessing
 
 ```{python}
 import nltk
 nltk.download('vader_lexicon')
 ```
-
-## EDA
 
 ```{python}
 detectors.head(2)
