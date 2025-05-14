@@ -159,6 +159,6 @@ detectors = detectors[["kind", ".pred_AI", ".pred_class", "detector", "native", 
 detectors = detectors.sample(frac=1, random_state=2023).reset_index(drop=True)
 
 # Save to CSV
-detectors.to_csv("detectors_prepped_with_document.csv", index=False)
+detectors.to_csv("detectors_prepped.csv", index=False)
 print("Saved processed dataset with document column as 'detectors_prepped.csv'")
 ```

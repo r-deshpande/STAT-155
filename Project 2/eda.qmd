@@ -1,7 +1,143 @@
 ---
-title: "readme"
+title: "eda"
 format: md
 editor: visual
 ---
 
-## Rucha Deshpande - STAT 155 Project
+## Introduction
+
+**Objective:**
+
+**Main Variables of Interest:**
+
+## Data Description 
+
+```{python}
+import nltk
+nltk.download('vader_lexicon')
+```
+
+## EDA
+
+```{python}
+detectors.head(2)
+```
+
+```{python}
+detectors.shape
+```
+
+```{python}
+import os # checking existence, seeing if the file is in the right place
+print(os.path.exists('detectors_prepped_with_document.csv'))
+```
+
+```{python}
+df = pd.read_csv('/Users/ruchadesh/Documents/Documents - Rucha’s MacBook Air/GitHub/STAT-155/Project 2/detectors_prepped_with_document.csv') # load in the dataset
+
+sia = SentimentIntensityAnalyzer() # initialize the SIA analyzer
+```
+
+```{python}
+keywords = ["I", "my", "we", "me", 
+            "feel", "love", "hate",
+            "afraid", "gonna", "wanna",
+            "you", "know", "kinda", "like", "uh"]
+# define the keyword list
+```
+
+```{python}
+def word_count(text):
+    return len(word_tokenize(text))
+
+def char_count(text):
+    return len(text)
+
+def sentence_count(text):
+    return len(sent_tokenize(text))
+
+def avg_word_length(text):
+    words = word_tokenize(text)
+    return np.mean([len(word) for word in words]) if words else 0
+
+def unique_word_count(text):
+    return len(set(word_tokenize(text)))
+
+def readability_score(text):
+    try:
+        return textstat.flesch_reading_ease(text)
+    except:
+        return None
+
+def sentiment_score(text):
+    return sia.polarity_scores(text)["compound"]
+
+def keyword_presence(text, keywords):
+    text_lower = text.lower()
+    return {f"keyword_{kw}": int(kw.lower() in text_lower) for kw in keywords}
+
+def pos_counts(text):
+    tags = pos_tag(word_tokenize(text))
+    counts = Counter(tag for word, tag in tags)
+    return {
+        "noun_count": sum(counts[tag] for tag in counts if tag.startswith("NN")),
+        "verb_count": sum(counts[tag] for tag in counts if tag.startswith("VB")),
+        "adj_count": sum(counts[tag] for tag in counts if tag.startswith("JJ")),
+        "adv_count": sum(counts[tag] for tag in counts if tag.startswith("RB")),
+```
+
+```{python}
+
+from nltk import pos_tag, word_tokenize
+from collections import Counter
+
+df["word_count"] = df["document"].apply(word_count)
+df["char_count"] = df["document"].apply(char_count)
+df["sentence_count"] = df["document"].apply(sentence_count)
+df["avg_word_length"] = df["document"].apply(avg_word_length)
+df["unique_word_count"] = df["document"].apply(unique_word_count)
+df["readability_score"] = df["document"].apply(readability_score)
+df["sentiment_score"] = df["document"].apply(sentiment_score)
+
+# Expand keyword presence
+keyword_df = df["document"].apply(lambda x: pd.Series(keyword_presence(x, keywords)))
+df = pd.concat([df, keyword_df], axis=1)
+
+# Expand part of speech counts
+pos_df = df["document"].apply(lambda x: pd.Series(pos_counts(x)))
+df = pd.concat([df, pos_df], axis=1)
+
+# Save result
+df.to_csv("detectors_enriched.csv", index=False)
+print("Saved enriched dataset as 'detectors_enriched.csv'")
+```
+
+```{python}
+df.head(2).T
+```
+
+```{python}
+df.columns
+```
+
+```{python}
+df.head().T
+```
+
+```{python}
+df2 = pd.read_csv('/Users/ruchadesh/Documents/Documents - Rucha’s MacBook Air/GitHub/STAT-155/Project 2/detectors_enriched.csv')
+
+df2.shape
+```
+
+```{python}
+print(df2.info())
+```
+
+```{python}
+print(df2.describe())
+```
+
+```{python}
+print(df2.head())
+```
