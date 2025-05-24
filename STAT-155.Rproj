@@ -12,3 +12,7 @@ Encoding: UTF-8
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
+
+PythonType: virtualenv
+PythonVersion: 3.11.11
+PythonPath: ~/Library/Caches/org.R-project.R/R/reticulate/uv/cache/archive-v0/pnTbP3WKvHaEXpPdLFiev/bin/python
