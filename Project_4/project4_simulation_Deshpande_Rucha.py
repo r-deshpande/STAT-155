@@ -67,11 +67,8 @@ for _ in tqdm(range(NUM_SIMULATIONS)):
 # Saving the results and putting them in a dataframe
 sim_results = pd.DataFrame({'beta_1': beta_1_estimates})
 
-# Save results to CSV
-sim_results.to_csv("project4_beta1_simulation_results.csv", index=False)
-
 # Plot distribution of beta_1 estimates
-plt.close()
+plt.close
 plt.hist(sim_results['beta_1'], bins=30, edgecolor='black')
 plt.axvline(beta_1, color='red', linestyle='--', label='Original Estimate')
 plt.title('Distribution of β₁ Estimates')
@@ -79,6 +76,5 @@ plt.xlabel('β₁')
 plt.ylabel('Frequency')
 plt.legend()
 plt.tight_layout()
-plt.savefig("project4_beta1_distribution_plot.png")
 plt.show()
 

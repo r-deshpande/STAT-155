@@ -1,7 +1,0 @@
----
-title: "project4_lastname_firstname.pdf"
-format: pdf
-editor: visual
----
-
-## 
