@@ -133,3 +133,108 @@ print(df2.describe())
 ```{python}
 print(df2.head())
 ```
+
+## EDA
+
+```{python}
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+```
+
+```{python}
+# Load the dataset
+df2 = pd.read_csv("detectors_enriched.csv")
+
+# All plots created have a white background
+sns.set(style="whitegrid")
+```
+
+```{python}
+# Basic data overview (data type, count, null count) and summary statistics (mean, median, mode, etc)
+print("Dataset Overview:")
+print(df2.info())
+print("Summary Statistics:")
+print(df2.describe(include='all'))
+```
+
+```{python}
+# Bar chart for class balance, predicted human vs predicted ai
+plt.figure(figsize=(6, 4))
+sns.countplot(data=df2, x=".pred_class", palette="Set2")
+plt.title("Class Distribution (Predicted)")
+plt.xlabel("Predicted Class")
+plt.ylabel("Count")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Written by native vs. non-native english speaker
+plt.figure(figsize=(6, 4))
+sns.countplot(data=df2, x="native", hue=".pred_class", palette="pastel")
+plt.title("Predicted Class by Native Status")
+plt.xlabel("Native English Writer")
+plt.ylabel("Count")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# type of prompt and what it was flagged as
+plt.figure(figsize=(10, 4))
+sns.countplot(data=df2, x="prompt", hue=".pred_class", palette="muted")
+plt.title("Predicted Class by Prompt Style")
+plt.xlabel("Prompt Type")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Distribution of the readability score (FLESCH)
+plt.figure(figsize=(8, 4))
+sns.histplot(df2["readability_score"], kde=True, bins=30, color="skyblue")
+plt.title("Readability Score Distribution")
+plt.xlabel("Flesch Reading Ease Score")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Boxplot of Sentiment score 
+plt.figure(figsize=(6, 4))
+sns.boxplot(data=df2, x=".pred_class", y="sentiment_score", palette="Set3")
+plt.title("Sentiment Score by Predicted Class")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Correlation matrix
+numeric_cols = df2.select_dtypes(include=np.number)
+plt.figure(figsize=(12, 10))
+sns.heatmap(numeric_cols.corr(), annot=True, fmt=".2f", cmap="coolwarm", center=0)
+plt.title("Correlation Matrix")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Word count vs readability
+plt.figure(figsize=(6, 4))
+sns.scatterplot(data=df2, x="word_count", y="readability_score", hue=".pred_class", alpha=0.6)
+plt.title("Word Count vs. Readability")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# average word length by class
+plt.figure(figsize=(6, 4))
+sns.boxplot(data=df2, x=".pred_class", y="avg_word_length", palette="Set2")
+plt.title("Average Word Length by Predicted Class")
+plt.tight_layout()
+plt.show()
+```
