@@ -1,0 +1,57 @@
+---
+title: "model"
+format: qmd
+editor: visual
+---
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, roc_auc_score, confusion_matrix
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+```
+
+```{python}
+target = "kind"
+```
+
+```{python}
+cat_cols = ["prompt", "native"]
+num_cols = ["word_count", "char_count", "sentence_count", "avg_word_length", "unique_word_count", "readability_score", "sentiment_score"]
+```
+
+```{python}
+X = df2[cat_cols + num_cols]
+y = df2[target]
+```
+
+```{python}
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+```
+
+```{python}
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)
+    ],
+    remainder='passthrough'
+```
+
+```{python}
+model = Pipeline(steps=
+    ('preprocessor', preprocessor),
+    ('classifier', LogisticRegression(max_iter=1000, random_state=42))
+)
+```
+
+```{python}
+model.fit(X_train, y_train)
+```
+
+```{python}
+y_pred = model.predict(X_test)
+```
