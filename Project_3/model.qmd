@@ -11,12 +11,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, roc_auc_score, confusion_matrix
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 ```
 
 ```{python}
-target = "kind"
+df2 = pd.read_csv('/Users/ruchadesh/Documents/Documents - Rucha’s MacBook Air/GitHub/STAT-155/Project_1/Data/detectors_enriched.csv')
+df2["kind_binary"] = df2["kind"].map({"Human": 0, "AI": 1})
+df2 = df2.dropna(subset=["kind_binary"])
+print(df2['kind_binary'])
 ```
 
 ```{python}
@@ -25,12 +29,28 @@ num_cols = ["word_count", "char_count", "sentence_count", "avg_word_length", "un
 ```
 
 ```{python}
+target = "kind_binary"
+print(df2["kind"].value_counts())
+
 X = df2[cat_cols + num_cols]
 y = df2[target]
 ```
 
 ```{python}
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Split without stratify, including missing y
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=None)
+
+# Then drop rows with missing y from training and test sets
+train_mask = ~y_train.isna()
+test_mask = ~y_test.isna()
+
+X_train_clean = X_train[train_mask]
+y_train_clean = y_train[train_mask]
+
+X_test_clean = X_test[test_mask]
+y_test_clean = y_test[test_mask]
 ```
 
 ```{python}
@@ -42,10 +62,15 @@ preprocessor = ColumnTransformer(
 ```
 
 ```{python}
-model = Pipeline(steps=
+preprocessor = ColumnTransformer(transformers=[
+    ('num', StandardScaler(), num_cols),
+    ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)
+])
+
+model = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('classifier', LogisticRegression(max_iter=1000, random_state=42))
-)
+])
 ```
 
 ```{python}
@@ -54,4 +79,10 @@ model.fit(X_train, y_train)
 
 ```{python}
 y_pred = model.predict(X_test)
+print(y_pred)
+```
+
+```{python}
+accuracy = model.score(X_test, y_test)
+print(f"{accuracy:.4f}")
 ```
