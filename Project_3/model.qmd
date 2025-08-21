@@ -14,6 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from sklearn.metrics import accuracy_score, classification_report, roc_auc_score, confusion_matrix
 ```
 
 ```{python}
@@ -85,4 +86,21 @@ print(y_pred)
 ```{python}
 accuracy = model.score(X_test, y_test)
 print(f"{accuracy:.4f}")
+```
+
+```{python}
+from sklearn.metrics import accuracy_score, classification_report, roc_auc_score, confusion_matrix
+
+# Accuracy
+print("Accuracy:", accuracy_score(y_test, y_pred))
+
+# Confusion Matrix
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+# Classification Report
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# ROC AUC (needs probabilities, not hard labels)
+y_prob = model.predict_proba(X_test)[:, 1]
+print("ROC AUC:", roc_auc_score(y_test, y_prob))
 ```
